@@ -147,7 +147,13 @@ Pour que la taille du cercle dépende de l'écart entre les doigts, on assigne l
 
 Il y a plusieurs manières permettant de déplacer des élements en 3D grâce aux données de MediaPipe. On choisit la manière la plus adaptée en fonction du nombre d'élements, des interactions entre les différents élements interagissent et en fonction des paramètres spécifiques à ces élements.
 
-### Data link
+Elles sont ici de la plus facile à la plus compliquée.
+
+Il y a deux étapes communes aux trois méthodes : 
+- Modifier les paramètres du `Camera` COMP afin que les points puissent se superposer au rendu de la webcam.
+- Créer un `Composite` TOP dans lequel on met le `Render` TOP et la dernière sortie du node `MediaPipe` pour superposer le rendu de la webcam et les élements que l'on fait apparaître.
+
+### Data links
 
 On utilise les data link, la manière dont on a fait apparaître un point rouge 2D ci-dessus, lorsque qu'on veux faire apparaître peu d'élements, et/ou que l'on veux pouvoir jouer avec les paramètres propres de chaque élement. C'est néanmoins la méthode la plus longue.
 
@@ -167,9 +173,13 @@ Pour l'index : h1:index_finger_tip:x etc
 
 Puis pareil pour h1:middle_finger_tip, h1:ring_finger_tip, h1:pinky_tip en x y et z pour chaque.
 
+À la place de lister chaque nom de coordonnées, on peux aussi écrire `h1:*_tip:*`, où "*" signifie "tout".
+
+Donc `h1:*_tip:*` = h1:[tout]_tip:[tout].
+
 ![Screenshot de l'interface de TD](./images/screen30.png)
 
-Si on veux avoir les deux mains, on peux faire pareil pour h2.
+Si on veux avoir les deux mains, on peux faire pareil pour h2 (et écrire `*_tip:*` pour avoir [tout]_tip:[tout] ).
 
 ![Screenshot de l'interface de TD](./images/screen32.png)
 
@@ -221,14 +231,199 @@ On crée un `Constant` MAT pour appliquer une couleur sur le `Geo`.
 
 Après le `Render` TOP, on crée un `Composite` TOP dans lequel on met également la dernière sortie du node `MediaPipe` afin de mettre les sphères par dessus la webcam. On met "Atop" comme "Operation" dans les paramètres du `Composite`.
 
+Notes: 
+- On pourrait comparer la position des sphères les unes entre les autres pour créer des évenements collisions.
+- On pourrait adapter la taille des sphères en fonction de la distance sur z du doigt à la caméra, en créant une formule avec la coordonnée z dans le Radius de chaque `Sphere`.
+- Au lieu d'utiliser un `Merge` SOP, on pourrait créer un `Geo` pour chaque sphère et les combiner tous dans le `Render` TOP. Ça permettrait que chaque sphère ait un material différent/une couleur différente.
+
 ### Instaciation
 
 On utilise l'instanciation lorsque l'on veux créer rapidement beaucoup d'élements, sur lesquels on ne pourra pas agir individuellement.
+
+![Screenshot de l'interface de TD](./images/screen43.png)
+
+On commence par créer 5 `Select` CHOP. On va vouloir récupérer les positions x, y et z de chaque pointe de doigts dans chaque `Select`. 
+
+Dans le paramètre "Channel Names", on écrit donc pour le premier "h1:thumb_tip:*" pour avoir tous les channels dont le nom commence par "h1:thumb_tip:".
+
+On fait pareil dans le second `Select` avec "h1:index_finger_tip:*" et ainsi de suite pour les 5.
+
+![Screenshot de l'interface de TD](./images/screen44.png)
+
+Ensuite, dans le paramètre "Rename to" des 5 `Select` CHOP, on écrit "x y z" pour que tous les channels s'appellent "x", "y" et "z" dans chaque `Select`.
+
+Cela va nous permettre de créer 3 channels x, y et z avec 5 samples qui seront chaque doigt.
+
+![Screenshot de l'interface de TD](./images/screen45.png)
+
+On crée donc un `Join` CHOP dans lequel on entre les 5 `Select` et on peux directement voir les 3 courbes x, y et z.
+
+![Screenshot de l'interface de TD](./images/screen46.png)
+
+Comme dans la méthode des data links, on peux ajouter un `Filter` CHOP entre chaque `Select` et le `Join` pour lisser le channel et éviter les mouvements saccadés. On peux mettre 0.2 comme "Filter Size" dans les paramètres.
+
+![Screenshot de l'interface de TD](./images/screen47.png)
+
+Après le `Join` CHOP, on crée un `Null` CHOP.
+
+![Screenshot de l'interface de TD](./images/screen48.png)
+
+On crée ensuite un `Sphere` SOP, qui sera la forme 3D que l'on va instacier. On réduit sa taille en mettant "0.05" comme paramètre pour "Radius" x, y et z.
+
+![Screenshot de l'interface de TD](./images/screen49.png)
+
+On crée ensuite un `Geo` COMP, un `Camera` COMP et un `Render` TOP.
+
+![Screenshot de l'interface de TD](./images/screen39.png)
+
+Comme dans la méthode des data links, on met 0.5 en Translate x et y, et 1 en Translate z dans le premier onglet des paramètres du `Camera` COMP.
+
+![Screenshot de l'interface de TD](./images/screen40.png)
+
+Dans l'onglet "View" des paramètres de la `Camera`, on met "Orthographic" dans le paramètre "Projection" et "1" pour "Ortho Width".
+
+On met également "0.9" en "Near" et "10" en "Far".
+
+![Screenshot de l'interface de TD](./images/screen50.png)
+
+Pour créer l'instanciation, on va dans l'onglet "Instance" des paramètres du `Geo`, et on active le paramètre "Instancing".
+
+![Screenshot de l'interface de TD](./images/screen51.png)
+
+Pour que 5 sphères soient créées aux positions x, y et z de chaque sample du `Null` CHOP, on fait glisser (ou on écrit le nom du node) le `Null` CHOP dans le paramètre "Translate OP", et on écrit x, y et z respectivement dans les paramètres "Translate X", "Y" et "Z".
+
+![Screenshot de l'interface de TD](./images/screen52.png)
+
+On crée un Material de notre choix pour appliquer au `Geo`, ici j'ai crée un `Constant` MAT.
+
+![Screenshot de l'interface de TD](./images/screen53.png)
+
+Pour pouvoir modifier la taille de chaque `Sphere` en fonction de la distance à la caméra (et donc la taille du doigt à l'écran), on crée un `Select` CHOP en sortie du `Join` et on ne sélectionne que z.
+
+![Screenshot de l'interface de TD](./images/screen54.png)
+
+On crée ensuite un `Math` CHOP, et on va dans l'onglet "Range" des paramètres.
+
+En approchant et reculant ma main de la webcam, je vois que z est entre 0 (quand ma main est loin) et -0.5 (quand ma main est proche). C'est donc ces valeurs que je met dans le paramètre "From Range".
+
+Je veux que le diamètre de mon cercle soit divisé par 2 (donc multiplié par 0.5) au plus loin et doublé au plus près, c'est donc ces valeurs que je met dans le paramètre "To Range".
+
+On crée un `Null` CHOP après le `Math`.
+
+![Screenshot de l'interface de TD](./images/screen55.png)
+
+On retourne dans les paramètres du `Geo` COMP, et on fait glisser (ou on écrit le nom du node) le second `Null` CHOP dans le paramèter `Scale OP`. On écrit z dans les paramètres "Scale X", "Y" et "Z".
+
+On peux alors voir la taille des sphères changer dans le `Render` TOP en fonction de la distance à la webcam, et venir changer les valeurs dans le `Math` CHOP selon l'effet désiré.
+
+![Screenshot de l'interface de TD](./images/screen56.png)
+
+Comme dans la méthode des data links, on crée un `Composite` TOP après le `Render` TOP, dans lequel on met également la dernière sortie du node `MediaPipe` afin de mettre les sphères par dessus la webcam. On met "Atop" comme "Operation" dans les paramètres du `Composite`.
+
+Notes: 
+- Dans les paramètres de l'instanciation, on peux également modifier notamment la rotation et la couleur du SOP crée, comme on l'a fait pour la position et la scale.
 
 ### Replicator
 
 On utilise le Replicator lorsque l'on veux créer beaucoup d'élements, sur lesquels on ne pourra pas beaucoup agir individuellement mais on pourra agir sur autant de paramètres que l'on souhaite. Cette méthode est également applicable aux TOPs.
 
+Pour utiliser le `Replicator`, il faut d'abord créer un tableau DAT contenant nos données. L'idéal est d'avoir autant de lignes que d'élements à créer (ici les pointes des doigts) et autant de colonnes que de coordonnées (ici x, y et z).
+
+![Screenshot de l'interface de TD](./images/screen45.png)
+
+On va donc faire comme pour la méthode de l'instanciation, créer 5 `Select` CHOP, 1 pour chaque bout de doigt avec x, y et z, les renommer et les regrouper dans un `Join` CHOP.
+
+On peux également ajouter des `Filters` CHOP entre chaque `Select` et le `Join`.
+
+![Screenshot de l'interface de TD](./images/screen57.png)
+
+On crée ensuite un `CHOP to` DAT, et on fait glisser le `Join` CHOP pour créer un data link.
+
+On a alors notre tableau avec les 5 lignes et 3 colonnes.
+
+![Screenshot de l'interface de TD](./images/screen58.png)
+
+On crée un `Replicator` COMP et on fait glisser le `CHOP to` sur le paramètre "Template DAT Table".
+
+On crée ensuite le "modèle" que le Replicator va recréer. En fonction de la complexité du modèle et des paramètres que l'on va modifier, on peux soit : 
+- Créer directement une sphère et on combinera toutes les sphères dans `Merge` SOP
+- Créer une `Base` COMP qui contiendra notre sphère et d'autres eléments et qu'on mettra tous dans un unique `Geo` à la fin (utile si on veux plusieurs géometrie différentes, comme une sphère + un cube sur chaque doigt)
+- Créer une `Base` COMP qui contiendra notre sphère, un `Geo` et un `Render`, et on combinera tous les `Render` à la fin (utile si on veux appliquer un Material différent à chaque élement)
+
+Je choisis ici la dernière méthode afin de montrer la manière la plus complète de le faire.
+
+![Screenshot de l'interface de TD](./images/screen59.png)
+
+On commence donc par créer une `Base` COMP, dans laquelle on peux entrer en double-cliquant ou en appuyant sur "i" quand elle est selectionnée. Pour en sortir, on dezoom à max ou on appuie sur "u".
+
+On fait glisser cette `Base` sur le paramètre "Master Operator" du `Replicator` et on décoche le paramètre "Ignore First Row".
+
+On devrait alors voir 5 node nommées `item0` à `item4` car le Replicator a recréer le modèle en autant de fois qu'il y a de lignes dans le tableau DAT.
+
+![Screenshot de l'interface de TD](./images/screen60.png)
+
+On entre alors dans la `Base` modèle, et on commence par créer un `Select` DAT pour venir récuperer le tableau DAT des coordonnées. On écrit "../chopto1" dans la paramètre "DAT" pour récupérer le node "chopto1" du parent de la `Base`.
+
+![Screenshot de l'interface de TD](./images/screen61.png)
+
+On crée ensuite un `DAT to` CHOP, et on vient glisser le `Select` DAT sur le paramètre DAT. On veux ne sélectionner que la ligne de l'item que l'on crée, et avoir 3 channels : x, y et z.
+On commence par sélectionner "Channel per Column" dans le paramètre "Output" et sélectioner "Values" dans le paramètre "First Column is". On crée donc autant de channels que de colonnes et on précise que la première colonne ne contient pas des noms mais bien des valeurs.
+
+![Screenshot de l'interface de TD](./images/screen62.png)
+
+Pour ne sélectionner que la ligne de l'item, on choisit "By Index" dans le paramètre "Select Rows". Dans "Start Row Index" et "End Row Index" on écrit "me.parent().digits".
+
+"me.parent().digits" = le numéro de mon composant parent. Ici la `Base` s'appelle "Base1" donc me.parent().digits est 1. Donc pour "item0" ça sera 0, pour item4 ça sera 4, ainsi de suite.
+
+Si on écrivait "me.digits" ça serait 1 pour chaque car la node s'appelle "datto1", mais ça serait 8 si la node s'appelait "datto8" et ainsi de suite.
+
+![Screenshot de l'interface de TD](./images/screen63.png)
+
+On peux ajouter un `Rename` CHOP après le `DAT to` pour renommer nos 3 channels en x, y et z.
+
+![Screenshot de l'interface de TD](./images/screen64.png)
+
+Maintenant qu'on a les positions, on peux créer un `Sphere` SOP, et un `Circle` SOP.
+
+J'ai mis 0.02 en Radius x, y et z de la `Sphere` et 0.04 en Radius x et y du `Circle`.
+
+![Screenshot de l'interface de TD](./images/screen65.png)
+
+Dans les paramètres Center x, y et z de la `Sphere` et du `Circle`, on mets mes channels x, y et z en sortie du `Rename` CHOP. On peux alors les voir bouger si on bouge la main.
+
+![Screenshot de l'interface de TD](./images/screen66.png)
+
+Comme je vais vouloir des Material différents pour la sphère et le cercle, on crée un `Geo` COMP pour chaque, mais un seul `Render` TOP et un seul `Camera` COMP.
+
+Comme dans les deux méthodes précédentes, on modifie les paramètres du `Camera` en mettant 0.5 en Translate x et y, et 1 en Translate z dans le premier onglet des paramètres.
+Dans l'onglet "View" des paramètre, on met "Orthographic" dans le paramètre "Projection" et "1" pour "Ortho Width".
+On met également "0.9" en "Near" et "10" en "Far".
+
+![Screenshot de l'interface de TD](./images/screen67.png)
+
+On crée ensuite un `Wireframe` MAT pour le Material du `Geo` de la sphère, et on sélectionne "Topology Wireframe" dans le paramètre "Wireframe Mode".
+
+![Screenshot de l'interface de TD](./images/screen68.png)
+
+On crée également un `Line` MAT pour le Material du `Geo` du cercle.
+
+Quand on regarde dans le `Render` TOP, on a alors notre sphère en wireframe entourée d'un cercle.
+
+On peux alors sortir de la `Base`, et cliquer sur "All" dans le paramètre "Recreate All Operators" du `Replicator`.
+Si on entre dans n'importe quel des `item`, on verra alors le même réseau mais avec une ligne du tableau de coordonnées différentes.
+
+![Screenshot de l'interface de TD](./images/screen69.png)
+
+À coté du `Replicator`, on crée un `Composite` TOP. Dans le paramètre "TOPs", on écrit "item*/render1" afin de sélectionner toutes les nodes "render1" dans les nodes dont le nom commence par "item". On choisit "Over" comme mode d'Operation, et on voit alors apparaître nos 5 élements.
+
+![Screenshot de l'interface de TD](./images/screen70.png)
+
+On crée un nouveau `Composite` TOP dans lequel on met également la dernière sortie du node `MediaPipe`, afin de mettre les sphères par dessus la webcam. On met "Atop" comme "Operation" dans les paramètres du `Composite`.
+
+Notes: 
+- On aurait pu également modifier la scale des élements en fonction de la distance de la main à la webcam avec la coordonnées z comme dans la méthode de l'instanciation
+- On aurait pu créer des `Circle` TOP au lieu de faire de la 3D
+- À chaque modification de la `Base` modèle, il faut recréer les "item" en cliquant sur "All" dans le paramètre "Recreate All Operators" du `Replicator` pour les "mettre à jour".
 
 # Pour aller + loin
 
