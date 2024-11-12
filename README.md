@@ -27,7 +27,7 @@ Les usages : exemples
 
 https://github.com/user-attachments/assets/466b417f-35ff-4fdf-91bf-47f5a52e5d09
 
-*Exemple de post instagram de [@pepepepebrick](https://www.instagram.com/pepepepebrick/?hl=fr)
+*Exemple de post instagram de [@pepepepebrick](https://www.instagram.com/pepepepebrick/?hl=fr)*
 
 https://github.com/user-attachments/assets/58d47cc1-69da-4908-8195-8de0e032cb36
 
@@ -45,9 +45,13 @@ Le node MediaPipe contient pleins de choses qui le font marcher, dans lesquels o
 
 ![Screenshot de l'interface de TD](./images/screen2.png)
 
+C'est ce node qui récupère et initialise tous les trackings, on le relie aux autres nodes spécifiques qui filtrent et trient ces données.
+
+Il permet d'activer et désactiver les fonctions de tracking dont on ne sert pas pour économiser de la puissance de calcul. Il est recommandé de ne garder d'actif que le tracking dont on se sert dans le projet.
+
 ### B. les infos sur le temps réel
 
-La première sortie du node MediaPipe est un CHOP qui permet de vérifier si on récupère bien les données en temps réel.
+La première sortie du node MediaPipe est un CHOP qui permet de vérifier si on récupère bien les données en temps réel et vérifier les perfomances du projet.
 
 ### C. le tracking du visage, des mains et du squelette
 
@@ -55,7 +59,7 @@ Le tracking du visage avec le node face_tracking permet de récupérer notamment
 
 ![Screenshot de l'interface de TD](./images/screen7.png)
 
-Le tracking des mains avec le node hand_tracking permet de récupérer la position des mains et de leurs points, ainsi qu'un rendu 3D.
+Le tracking des mains avec le node hand_tracking permet de récupérer la position des mains et de leurs points, ainsi qu'un rendu 3D. On ne peux tracker que 2 mains.
 
 ![Screenshot de l'interface de TD](./images/screen8.png)
 
@@ -72,24 +76,24 @@ Le tracking du squelette avec le node pose_tracking permet de récupérer les po
 
 ### D. la détection des objets et du visage
 
-La détection et la classification des objets avec le node object_tracking1 sert à reconnaître les objets sur la vidéo avec plus ou moins de certitude. Ça ne marche pas hyper bien.
+La détection et la classification des objets avec le node object_tracking1 sert à reconnaître les objets sur la vidéo avec plus ou moins de certitude.
 
 ![Screenshot de l'interface de TD](./images/screen12.png)
 
 ![Screenshot de l'interface de TD](./images/screen6.png)
 *Ici la détection de mon téléphone avec seulement 55% de certitude*
 
-Le node face_detector1 sert à détecter des visages et sortir la positions de leurs points.
+Le node face_detector1 sert à détecter des visages et sortir la positions de leurs points. C'est une détection plus simplifié que le node face_tracking, et on peux détecter jusqu'à 10 visages.
 
 ![Screenshot de l'interface de TD](./images/screen13.png)
 
-Le node image_classification essaie de reconnaître des objets sur l'image. Ça ne marche pas hyper bien.
-![Screenshot de l'interface de TD](./images/screen14.png)
+Le node image_classification essaie de reconnaître des objets sur l'image. Ça ne marche pas hyper bien dans le sens où la classification ne fonctionne que rarement, et lorsqu'elle fonctionne la certitude est assez basse.
 
+![Screenshot de l'interface de TD](./images/screen14.png)
 
 ### E. la Virtual Webcam Chain
 
-Faire du post process extérieur à touch (obs) pour le réintégrer à Touch
+La Virtual Webcam Chain permet de faire du post processing à l'extérieur de TouchDesigner (dans OBS par exemple) puis réintegrer le flux video dans TD.
 
 ### F. le node image_segmentation
 
@@ -166,7 +170,7 @@ Pour que la taille du cercle dépende de l'écart entre les doigts, on assigne l
 
 Il y a plusieurs manières permettant de déplacer des élements en 3D grâce aux données de MediaPipe. On choisit la manière la plus adaptée en fonction du nombre d'élements, des interactions entre les différents élements et en fonction des paramètres spécifiques à ces élements.
 
-Elles sont ici de la plus facile à la plus compliquée : data links, instanciation, Replicator.
+Elles sont ici de la plus facile à la plus compliquée : [data links](#data-links), [instanciation](#instaciation), [Replicator](#replicator).
 
 Il y a deux étapes communes aux trois méthodes : 
 - Modifier les paramètres du `Camera` COMP afin que les points puissent se superposer au rendu de la webcam.
@@ -174,7 +178,7 @@ Il y a deux étapes communes aux trois méthodes :
 
 ### Data links
 
-On utilise les data links, la manière dont on a fait apparaître un point rouge 2D ci-dessus, lorsque qu'on veux faire apparaître peu d'élements, et/ou que l'on veux pouvoir jouer avec les paramètres propres de chaque élement. C'est néanmoins la méthode la plus longue.
+On utilise les data links, la manière dont on a fait apparaître un point rouge 2D ci-dessus, lorsque qu'on veut faire apparaître peu d'élements, et/ou que l'on veut pouvoir jouer avec les paramètres propres de chaque élement. C'est néanmoins la méthode la plus longue.
 
 C'est la méthode utilisée dans le projet "handTrackingExemple.toe".
 
@@ -198,11 +202,11 @@ Donc `h1:*_tip:*` = h1:[tout]_tip:[tout].
 
 ![Screenshot de l'interface de TD](./images/screen30.png)
 
-Si on veux avoir les deux mains, on peut faire pareil pour h2 (et écrire `*_tip:*` pour avoir [tout]_tip:[tout] ).
+Si on veut avoir les deux mains, on peut faire pareil pour h2 (et écrire `*_tip:*` pour avoir [tout]_tip:[tout] ).
 
 ![Screenshot de l'interface de TD](./images/screen32.png)
 
-Après le `Select`, on crée un `Filter` CHOP afin de lisser légèrement les données et éviter les mouvements saccadés. On met 0.2 dans le paramètre "Filter Width" ce qui veux dire que les valeurs sont lissées sur 0.2 secondes.
+Après le `Select`, on crée un `Filter` CHOP afin de lisser légèrement les données et éviter les mouvements saccadés. On met 0.2 dans le paramètre "Filter Width" ce qui veut dire que les valeurs sont lissées sur 0.2 secondes.
 
 Plus la valeur (en seconde) est élevée, plus il y aura un effet de "lag" sur le déplacement, ne pas hésitez à revenir modifier la valeur du `Filter` plus tard pour choisir la valeur idéale.
 
@@ -257,7 +261,7 @@ Notes:
 
 ### Instaciation
 
-On utilise l'instanciation lorsque l'on veux créer rapidement beaucoup d'élements, sur lesquels on ne pourra pas agir individuellement.
+On utilise l'instanciation lorsque l'on veut créer rapidement beaucoup d'élements, sur lesquels on ne pourra pas agir individuellement.
 
 ![Screenshot de l'interface de TD](./images/screen43.png)
 
@@ -346,7 +350,7 @@ Notes:
 
 *[Le principe du Replicator dans TouchDesigner](https://github.com/LucieMrc/TD_Replicator_FR)*
 
-On utilise le Replicator lorsque l'on veux créer beaucoup d'élements, sur lesquels on ne pourra pas beaucoup agir individuellement mais on pourra agir sur autant de paramètres que l'on souhaite. Cette méthode est également applicable aux TOPs.
+On utilise le Replicator lorsque l'on veut créer beaucoup d'élements, sur lesquels on ne pourra pas beaucoup agir individuellement mais on pourra agir sur autant de paramètres que l'on souhaite. Cette méthode est également applicable aux TOPs.
 
 Pour utiliser le `Replicator`, il faut d'abord créer un tableau DAT contenant nos données. L'idéal est d'avoir autant de lignes que d'élements à créer (ici les pointes des doigts) et autant de colonnes que de coordonnées (ici x, y et z).
 
@@ -368,8 +372,8 @@ On crée un `Replicator` COMP et on fait glisser le `CHOP to` sur le paramètre 
 
 On crée ensuite le "modèle" que le Replicator va recréer. En fonction de la complexité du modèle et des paramètres que l'on va modifier, on peut soit : 
 - Créer directement une sphère et on combinera toutes les sphères dans `Merge` SOP
-- Créer une `Base` COMP qui contiendra notre sphère et d'autres eléments et qu'on mettra tous dans un unique `Geo` à la fin (utile si on veux plusieurs géometrie différentes, comme une sphère + un cube sur chaque doigt)
-- Créer une `Base` COMP qui contiendra notre sphère, un `Geo` et un `Render`, et on combinera tous les `Render` à la fin (utile si on veux appliquer un Material différent à chaque élement)
+- Créer une `Base` COMP qui contiendra notre sphère et d'autres eléments et qu'on mettra tous dans un unique `Geo` à la fin (utile si on veut plusieurs géometrie différentes, comme une sphère + un cube sur chaque doigt)
+- Créer une `Base` COMP qui contiendra notre sphère, un `Geo` et un `Render`, et on combinera tous les `Render` à la fin (utile si on veut appliquer un Material différent à chaque élement)
 
 Je choisis ici la dernière méthode afin de montrer la manière la plus complète de le faire.
 
@@ -387,7 +391,7 @@ On entre alors dans la `Base` modèle, et on commence par créer un `Select` DAT
 
 ![Screenshot de l'interface de TD](./images/screen61.png)
 
-On crée ensuite un `DAT to` CHOP, et on vient glisser le `Select` DAT sur le paramètre "DAT". On veux ne sélectionner que la ligne de l'item que l'on crée, et avoir 3 channels : x, y et z.
+On crée ensuite un `DAT to` CHOP, et on vient glisser le `Select` DAT sur le paramètre "DAT". On veut ne sélectionner que la ligne de l'item que l'on crée, et avoir 3 channels : x, y et z.
 On commence par sélectionner "Channel per Column" dans le paramètre "Output" et sélectioner "Values" dans le paramètre "First Column is". On crée donc autant de channels que de colonnes et on précise que la première colonne ne contient pas des noms mais bien des valeurs.
 
 ![Screenshot de l'interface de TD](./images/screen62.png)
