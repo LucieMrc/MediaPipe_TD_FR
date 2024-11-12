@@ -18,7 +18,14 @@ Le [lien de téléchargement](https://github.com/torinmb/mediapipe-touchdesigner
 ![Screenshot de l'interface de TD](./images/screen1.png)
 *Le fichier d'exemple MediaPipeTouchdesigner.toe.*
 
-MediaPipe permet de tracker notamment ...
+MediaPipe permet de tracker notamment les mains, le visage, les parties du corps.
+
+Les usages :
+
+
+Exemple de post instagram de @pepepepebrick
+
+Exemple de post instagram de @poetengineer
 
 
 ## Le fichier MediaPipeTouchdesigner.toe
@@ -75,7 +82,7 @@ Le node image_classification essaie de reconnaître des objets sur l'image. Ça 
 
 ### E. la Virtual Webcam Chain
 
-Je ne suis pas vraiment sûre de l'usage de la Virtual Webcam Chain.
+Faire du post process extérieur à touch (obs) pour le réintégrer à Touch
 
 ### F. le node image_segmentation
 
@@ -152,7 +159,7 @@ Pour que la taille du cercle dépende de l'écart entre les doigts, on assigne l
 
 Il y a plusieurs manières permettant de déplacer des élements en 3D grâce aux données de MediaPipe. On choisit la manière la plus adaptée en fonction du nombre d'élements, des interactions entre les différents élements et en fonction des paramètres spécifiques à ces élements.
 
-Elles sont ici de la plus facile à la plus compliquée.
+Elles sont ici de la plus facile à la plus compliquée : data links, instanciation, Replicator.
 
 Il y a deux étapes communes aux trois méthodes : 
 - Modifier les paramètres du `Camera` COMP afin que les points puissent se superposer au rendu de la webcam.
