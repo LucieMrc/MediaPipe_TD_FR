@@ -20,13 +20,20 @@ Le [lien de téléchargement](https://github.com/torinmb/mediapipe-touchdesigner
 
 MediaPipe permet de tracker notamment les mains, le visage, les parties du corps.
 
-Les usages :
+<details>
+    <Summary>
+Les usages : exemples
+    </Summary>
 
-![video exemple1](./images/gif_pepepebrick.mp4)
-*Exemple de post instagram de @pepepepebrick*
+https://github.com/user-attachments/assets/466b417f-35ff-4fdf-91bf-47f5a52e5d09
 
-Exemple de post instagram de @poetengineer
+*Exemple de post instagram de [@pepepepebrick](https://www.instagram.com/pepepepebrick/?hl=fr)
 
+https://github.com/user-attachments/assets/58d47cc1-69da-4908-8195-8de0e032cb36
+
+*Exemple de post instagram de [@poetengineer](https://www.instagram.com/the.poet.engineer/?hl=fr)*
+
+</details>
 
 ## Le fichier MediaPipeTouchdesigner.toe
 
