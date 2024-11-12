@@ -22,7 +22,7 @@ MediaPipe permet de tracker notamment les mains, le visage, les parties du corps
 
 Les usages :
 
-![video exemple1](./images/gif_pepepebrick.mp4)
+https://github.com/user-attachments/assets/466b417f-35ff-4fdf-91bf-47f5a52e5d09
 *Exemple de post instagram de @pepepepebrick*
 
 Exemple de post instagram de @poetengineer
